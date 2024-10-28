@@ -50,12 +50,12 @@ class KeypadController:
             keypad_view: KeypadView,
             calculator: Calculator,
     ):
-        self._display: DisplayView = display_view
-        self._keypad: KeypadView = keypad_view
-        self._calculator: Calculator = calculator
         # subtract 2 for decimal separator and minus sign
         if (display_view.max_items - 2) < calculator.precision:
             raise ValueError('DisplayView is incapable of showing full Calculator precision.')
+        self._display: DisplayView = display_view
+        self._keypad: KeypadView = keypad_view
+        self._calculator: Calculator = calculator
         self._error: Error | None = None
         self._clear_on_update = False       #TODO: think of a better name for this one!
         self._blocked: set[KeyCode]  = set()
@@ -69,15 +69,20 @@ class KeypadController:
 
     def _calculate_result(self):
         result = self._calculator.result
+        match result:
+            case model.Error.DIVISION_BY_ZERO:
+                self._error = Error.DIVISION_BY_ZERO
+            case model.Error.RESULT_TOO_LARGE:
+                self._error = Error.RESULT_TOO_LARGE
+            case model.Error():
+                self._error = Error.GENERAL_PURPOSE
+            case str():
+                self._error = None
+            case _:
+                self._error = Error.GENERAL_PURPOSE
+        # setup new controller & calculator state
         self._calculator.clear()
-        if isinstance(result, model.Error):
-            match result:
-                case model.Error.DIVISION_BY_ZERO:
-                    self._error = Error.DIVISION_BY_ZERO
-                case model.Error.RESULT_TOO_LARGE:
-                    self._error = Error.RESULT_TOO_LARGE
-                case _:
-                    self._error = Error.GENERAL_PURPOSE
+        if self._error:
             self._blocked = set(_KEYS_ALL_BUT_CLEAR)
         else:
             self._calculator.replace_operand(result)
