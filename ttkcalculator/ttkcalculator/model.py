@@ -159,7 +159,7 @@ class Operand:
         if self._decimal_idx:
             num_int = self._digits[:self._decimal_idx]
             num_dec = self._digits[self._decimal_idx:]
-            num_str = f'{''.join(num_int)}.{''.join(num_dec)}'
+            num_str = f"{''.join(num_int)}.{''.join(num_dec)}"
         else:
             num_str = ''.join(self._digits)
         return f'{self._sign}{num_str}'
